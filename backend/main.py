@@ -22,7 +22,9 @@ cache_dir.mkdir(exist_ok=True)
 os.environ["G4F_HAR_AND_COOKIES_PATH"] = str(cache_dir.resolve())
 # --- Конец конфигурации g4f ---
 
-app = FastAPI(title="Mystic Tarot API")
+app = FastAPI(title="Mystic Tarot API") from fastapi.middleware.cors import CORSMiddleware
+
+
 
 app.add_middleware(
     CORSMiddleware,
