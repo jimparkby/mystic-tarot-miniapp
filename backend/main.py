@@ -12,7 +12,13 @@ import hashlib
 import os
 from pathlib import Path
 
-app = FastAPI(title="Mystic Tarot API")  # <- ПЕРЕНОС СТРОКИ!
+# --- Начало конфигурации g4f ---
+cache_dir = Path("./.g4f_cache")
+cache_dir.mkdir(exist_ok=True)
+os.environ["G4F_HAR_AND_COOKIES_PATH"] = str(cache_dir.resolve())
+# --- Конец конфигурации g4f ---
+
+app = FastAPI(title="Mystic Tarot API")
 
 # CORS middleware
 app.add_middleware(
@@ -22,6 +28,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
 
 app.mount("/cards", StaticFiles(directory="cards"), name="cards")
 # ... остальной код ...
