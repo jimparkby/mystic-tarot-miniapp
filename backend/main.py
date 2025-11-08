@@ -251,14 +251,45 @@ async def ai_interpretation(question: str, cards: List[Card], spread_type: str) 
 
     Твое толкование:
     """
+    
     try:
-        response = await g4f.ChatCompletion.create_async(
-            model=g4f.models.gpt_4o_mini,
-            messages=[{"role": "user", "content": prompt}],
+        # Таймаут 15 секунд
+        response = await asyncio.wait_for(
+            g4f.ChatCompletion.create_async(
+                model=g4f.models.gpt_4o_mini,
+                messages=[{"role": "user", "content": prompt}],
+            ),
+            timeout=15.0
         )
         return response
+    except asyncio.TimeoutError:
+        # Fallback при таймауте
+        return generate_simple_interpretation(question, cards, spread_type)
     except Exception as e:
-        return f"Произошла ошибка при обращении к AI: {str(e)}"
+        # Fallback при любой ошибке
+        return generate_simple_interpretation(question, cards, spread_type)
+
+
+def generate_simple_interpretation(question: str, cards: List[Card], spread_type: str) -> str:
+    """Fallback интерпретация"""
+    interpretation = f"🔮 **Толкование расклада**\n\n"
+    interpretation += f"**Ваш вопрос:** {question}\n\n"
+    
+    for card in cards:
+        reversed_text = " (перевернутая)" if card.reversed else ""
+        interpretation += f"**{card.position}:** {card.name_ru}{reversed_text}\n"
+        interpretation += f"_{card.meaning}_\n\n"
+        
+        if card.reversed:
+            interpretation += f"_Перевернутое положение предлагает взглянуть на ситуацию с другой стороны._\n\n"
+    
+    interpretation += f"\n**Общий совет:** Обратите внимание на взаимосвязь всех карт. "
+    
+    if len(cards) >= 3:
+        interpretation += f"Первая карта ({cards[0].name_ru}) задаёт основной тон. "
+        interpretation += f"Последняя карта ({cards[-1].name_ru}) указывает на возможный исход."
+    
+    return interpretation
 
 
 @app.get("/", response_class=HTMLResponse)
