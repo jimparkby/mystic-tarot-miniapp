@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronRight, Sparkles, Moon, Sun, Star, Heart, Zap, Eye, Crown, Shield } from 'lucide-react';
 
-const API_URL = 'http://localhost:8000';
+const API_URL = process.env.REACT_APP_API_URL || 'https://mystic-tarot-miniapp.vercel.app/';
 
 const cardIcons = [
   <Star className="w-12 h-12" />, <Zap className="w-12 h-12" />, <Eye className="w-12 h-12" />,
