@@ -32,7 +32,7 @@ app.add_middleware(
 
 
 app.mount("/cards", StaticFiles(directory="cards"), name="cards")
-# ... остальной код ...
+
 
 MAJOR_ARCANA = [
     {"id": 0, "name": "The Fool", "name_ru": "Шут", "meaning": "новые начинания, спонтанность, невинность",
