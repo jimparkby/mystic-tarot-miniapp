@@ -1,8 +1,16 @@
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware  # <- ОДИН РАЗ тут
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-# ... другие импорты ...
+from pydantic import BaseModel
+from typing import List, Optional
+import random
+import asyncio
+import uvicorn
+from datetime import datetime
+import hashlib
+import os
+from pathlib import Path
 
 app = FastAPI(title="Mystic Tarot API")  # <- ПЕРЕНОС СТРОКИ!
 
