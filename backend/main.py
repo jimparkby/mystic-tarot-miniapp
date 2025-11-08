@@ -1,29 +1,12 @@
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware  # <- ОДИН РАЗ тут
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
-from typing import List, Optional
-import random
-import asyncio
-import uvicorn
-from datetime import datetime
-import hashlib
-import g4f
-import os
-from pathlib import Path
+# ... другие импорты ...
 
-# --- Начало конфигурации g4f ---
-# Создаем папку для кэша в корне проекта, если ее нет
-cache_dir = Path("./.g4f_cache")
-cache_dir.mkdir(exist_ok=True)
+app = FastAPI(title="Mystic Tarot API")  # <- ПЕРЕНОС СТРОКИ!
 
-# Устанавливаем путь для har-файлов и cookies
-os.environ["G4F_HAR_AND_COOKIES_PATH"] = str(cache_dir.resolve())
-# --- Конец конфигурации g4f ---
-
-app = FastAPI(title="Mystic Tarot API")
-
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -33,6 +16,7 @@ app.add_middleware(
 )
 
 app.mount("/cards", StaticFiles(directory="cards"), name="cards")
+# ... остальной код ...
 
 MAJOR_ARCANA = [
     {"id": 0, "name": "The Fool", "name_ru": "Шут", "meaning": "новые начинания, спонтанность, невинность",
