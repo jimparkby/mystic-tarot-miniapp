@@ -57,13 +57,7 @@ app.add_middleware(
 app = FastAPI(title="Mystic Tarot API")
 
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
 
 
 
@@ -266,20 +260,16 @@ def draw_cards(spread_type: str) -> List[Card]:
 
 
 
-
-# main.py (примерно строка 314, где была старая ai_interpretation)
-
-# Синхронная функция-обертка для вызова Gemini
 def _get_gemini_interpretation_sync(prompt: str, model: str) -> str:
     """Синхронная функция для вызова API Gemini."""
     
-    # Конфигурация генерации (настройки креативности и длины ответа)
+ 
     config = types.GenerateContentConfig(
         temperature=0.7,
-        max_output_tokens=2048 # Максимальная длина ответа
+        max_output_tokens=2048 
     )
     
-    # Отправка синхронного запроса
+  
     response = gemini_client.models.generate_content(
         model=model,
         contents=prompt,
@@ -297,7 +287,7 @@ async def ai_interpretation(question: str, cards: List[Card], spread_type: str) 
 
     cards_text = "\n".join(cards_description)
 
-    # Единый Prompt для Gemini
+   
     prompt = f"""
     Выступи в роли опытного таролога.
     Дай глубокое, но понятное толкование расклада таро, синтезируя значения карт в единый рассказ.
