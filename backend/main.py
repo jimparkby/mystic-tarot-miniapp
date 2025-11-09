@@ -13,25 +13,38 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-from openai import OpenAI
 import logging
+import os
+
+from google import genai
+from google.genai import types 
+from google.genai.errors import APIError
+
 
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 
-try:
-    openai_client = OpenAI()
-    # Выбираем модель. gpt-3.5-turbo — хороший и недорогой вариант.
-    LLM_MODEL = "gpt-3.5-turbo" 
-    logging.info(f"✅ OpenAI Client initialized with model: {LLM_MODEL}")
-except Exception as e:
-    logging.error(f"❌ Error initializing OpenAI client: {e}. Check your OPENAI_API_KEY.")
-    openai_client = None
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+gemini_client = None
+
+try: 
+    GEMINI_KEY = os.getenv("GEMINI_API_KEY")
+    if not GEMINI_KEY:
+        
+        logging.error("❌ GEMINI_API_KEY не найден в .env. Интерпретация будет неполной.")
+    else:
+        
+        gemini_client = genai.Client(api_key=GEMINI_KEY)
+        logging.info(f"✅ Gemini Client initialized with model: {GEMINI_MODEL}")
+
+except Exception as e: 
+    logging.error(f"❌ Ошибка при инициализации клиента Gemini: {e}")
+    gemini_client = None
 
 app = FastAPI(title="Mystic Tarot API")
 
-# CORS middleware
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -43,7 +56,7 @@ app.add_middleware(
 
 app = FastAPI(title="Mystic Tarot API")
 
-# CORS middleware
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -254,6 +267,27 @@ def draw_cards(spread_type: str) -> List[Card]:
 
 
 
+# main.py (примерно строка 314, где была старая ai_interpretation)
+
+# Синхронная функция-обертка для вызова Gemini
+def _get_gemini_interpretation_sync(prompt: str, model: str) -> str:
+    """Синхронная функция для вызова API Gemini."""
+    
+    # Конфигурация генерации (настройки креативности и длины ответа)
+    config = types.GenerateContentConfig(
+        temperature=0.7,
+        max_output_tokens=2048 # Максимальная длина ответа
+    )
+    
+    # Отправка синхронного запроса
+    response = gemini_client.models.generate_content(
+        model=model,
+        contents=prompt,
+        config=config
+    )
+    
+    return response.text
+
 async def ai_interpretation(question: str, cards: List[Card], spread_type: str) -> str:
     cards_description = []
     for card in cards:
@@ -263,6 +297,7 @@ async def ai_interpretation(question: str, cards: List[Card], spread_type: str) 
 
     cards_text = "\n".join(cards_description)
 
+    # Единый Prompt для Gemini
     prompt = f"""
     Выступи в роли опытного таролога.
     Дай глубокое, но понятное толкование расклада таро, синтезируя значения карт в единый рассказ.
@@ -277,28 +312,98 @@ async def ai_interpretation(question: str, cards: List[Card], spread_type: str) 
     Твое толкование:
     """
     
-   
-    if not openai_client:
-        logging.warning("OpenAI client not initialized. Using fallback interpretation.")
+    if not gemini_client:
+        logging.warning("Gemini client not initialized. Using fallback interpretation.")
         return generate_simple_interpretation(question, cards, spread_type)
         
     try:
-       
-        response = await asyncio.to_thread(
-            openai_client.chat.completions.create,
-            model=LLM_MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            timeout=20.0
+        # Для вызова синхронной функции Gemini из асинхронной функции FastAPI
+        interpretation = await asyncio.to_thread(
+            _get_gemini_interpretation_sync,
+            prompt=prompt,
+            model=GEMINI_MODEL
         )
         
-        return response.choices[0].message.content
+        return interpretation
         
+    except APIError as e:
+        # Fallback при ошибке API (например, лимиты, неверный ключ)
+        logging.error(f"Gemini API Error: {e}")
+        return generate_simple_interpretation(question, cards, spread_type)
     except Exception as e:
-        # Fallback при ошибке
-        logging.error(f"OpenAI API Error: {e}")
+        # Fallback при любой другой ошибке (например, таймаут)
+        logging.error(f"Gemini General Error: {e}")
         return generate_simple_interpretation(question, cards, spread_type)
 
 
+def _get_gemini_interpretation_sync(prompt: str, model: str) -> str:
+    """Синхронная функция для вызова API Gemini."""
+    
+   
+    config = types.GenerateContentConfig(
+        temperature=0.7,
+        max_output_tokens=2048 # Максимальная длина ответа
+    )
+    
+   
+    response = gemini_client.models.generate_content(
+        model=model,
+        contents=prompt,
+        config=config
+    )
+    
+    
+    return response.text
+
+
+async def ai_interpretation(question: str, cards: List[Card], spread_type: str) -> str:
+    cards_description = []
+    for card in cards:
+        reversed_text = " (перевернутая)" if card.reversed else ""
+        cards_description.append(
+            f"- Позиция '{card.position}': {card.name_ru}{reversed_text}. Ключевое значение: {card.meaning}.")
+
+    cards_text = "\n".join(cards_description)
+
+    
+    prompt = f"""
+    Выступи в роли опытного таролога.
+    Дай глубокое, но понятное толкование расклада таро, синтезируя значения карт в единый рассказ.
+    Не используй вступлений или заключений, предоставь только само толкование.
+    Структурируй ответ: начни с общего вывода, затем кратко раскрой значение каждой карты в ее позиции, и закончи синтезированным советом.
+
+    Вопрос пользователя: "{question}"
+    Тип расклада: "{spread_type}"
+    Выпавшие карты:
+    {cards_text}
+
+    Твое толкование:
+    """
+    
+    if not gemini_client:
+        logging.warning("Gemini client not initialized. Using fallback interpretation.")
+        return generate_simple_interpretation(question, cards, spread_type)
+        
+    try:
+        
+        interpretation = await asyncio.to_thread(
+            _get_gemini_interpretation_sync,
+            prompt=prompt,
+            model=GEMINI_MODEL
+        )
+        
+        return interpretation
+        
+    except APIError as e:
+        logging.error(f"Gemini API Error: {e}")
+        return generate_simple_interpretation(question, cards, spread_type)
+    except Exception as e:
+        logging.error(f"Gemini General Error: {e}")
+        return generate_simple_interpretation(question, cards, spread_type)
+
+
+ 
+    
 def generate_simple_interpretation(question: str, cards: List[Card], spread_type: str) -> str:
     """Fallback интерпретация"""
     interpretation = f"🔮 **Толкование расклада**\n\n"

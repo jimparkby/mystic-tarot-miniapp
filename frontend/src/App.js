@@ -1,7 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronRight, Sparkles, Moon, Sun, Star, Heart, Zap, Eye, Crown, Shield } from 'lucide-react';
+import axios from 'axios';
+import { BASE_API_URL } from './apiConfig'; 
 
-const API_URL = process.env.REACT_APP_API_URL || 'https://mystic-tarot-miniapp.vercel.app/';
+
+
+const createReading = async (question, spreadType) => {
+    // ...
+    try {
+        // Замена старого URL на BASE_API_URL
+        const response = await axios.post(`${BASE_API_URL}/api/reading`, {
+            question,
+            spread_type: spreadType,
+            //init_data: initData, // Оставьте, если нужно для авторизации
+            language: 'ru'
+        });
+        // ...
+    } catch (error) {
+        // ...
+    }
+};
 
 const cardIcons = [
   <Star className="w-12 h-12" />, <Zap className="w-12 h-12" />, <Eye className="w-12 h-12" />,
@@ -22,7 +40,7 @@ export default function TarotApp() {
   const [particles, setParticles] = useState([]);
 
   useEffect(() => {
-    fetch(`${API_URL}/api/spreads`)
+    fetch(`${BASE_API_URL}/api/spreads`)
       .then(res => res.json())
       .then(data => setSpreads(data.spreads))
       .catch(console.error);
@@ -41,7 +59,7 @@ export default function TarotApp() {
     setShowInterpretation(false);
 
     try {
-      const response = await fetch(`${API_URL}/api/reading`, {
+      const response = await fetch(`${BASE_API_URL}/api/reading`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: question, spread_type: selectedSpread }),
@@ -162,7 +180,7 @@ export default function TarotApp() {
                                     {getRandomIcon()}
                                 </div>
                                 <div className="absolute w-full h-full backface-hidden rotate-y-180 bg-gray-800 rounded-xl overflow-hidden">
-                                    <img src={`${API_URL}/cards/${card.image}`} alt={card.name_ru} className="w-full h-full object-cover" />
+                                    <img src={`${BASE_API_URL}/cards/${card.image}`} alt={card.name_ru} className="w-full h-full object-cover" />
                                     <div className="absolute bottom-0 w-full p-2 bg-black/60 text-center">
                                         <h4 className="font-bold text-sm">{card.name_ru}</h4>
                                         {card.reversed && <span className="text-xs text-red-300">Перевернутая</span>}
