@@ -1,8 +1,0 @@
-fastapi
-uvicorn[standard]
-pydantic
-python-multipart
-websockets
-aiofiles
-google-genai 
-python-dotenv
