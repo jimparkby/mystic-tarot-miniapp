@@ -12,11 +12,34 @@ import hashlib
 import os
 from pathlib import Path
 
-# --- Начало конфигурации g4f ---
-cache_dir = Path("./.g4f_cache")
-cache_dir.mkdir(exist_ok=True)
-os.environ["G4F_HAR_AND_COOKIES_PATH"] = str(cache_dir.resolve())
-# --- Конец конфигурации g4f ---
+from dotenv import load_dotenv
+from openai import OpenAI
+import logging
+
+load_dotenv()
+
+logging.basicConfig(level=logging.INFO)
+
+try:
+    openai_client = OpenAI()
+    # Выбираем модель. gpt-3.5-turbo — хороший и недорогой вариант.
+    LLM_MODEL = "gpt-3.5-turbo" 
+    logging.info(f"✅ OpenAI Client initialized with model: {LLM_MODEL}")
+except Exception as e:
+    logging.error(f"❌ Error initializing OpenAI client: {e}. Check your OPENAI_API_KEY.")
+    openai_client = None
+
+app = FastAPI(title="Mystic Tarot API")
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 app = FastAPI(title="Mystic Tarot API")
 
@@ -229,6 +252,8 @@ def draw_cards(spread_type: str) -> List[Card]:
     return drawn_cards
 
 
+
+
 async def ai_interpretation(question: str, cards: List[Card], spread_type: str) -> str:
     cards_description = []
     for card in cards:
@@ -252,21 +277,25 @@ async def ai_interpretation(question: str, cards: List[Card], spread_type: str) 
     Твое толкование:
     """
     
-    try:
-        # Таймаут 15 секунд
-        response = await asyncio.wait_for(
-            g4f.ChatCompletion.create_async(
-                model=g4f.models.gpt_4o_mini,
-                messages=[{"role": "user", "content": prompt}],
-            ),
-            timeout=15.0
-        )
-        return response
-    except asyncio.TimeoutError:
-        # Fallback при таймауте
+   
+    if not openai_client:
+        logging.warning("OpenAI client not initialized. Using fallback interpretation.")
         return generate_simple_interpretation(question, cards, spread_type)
+        
+    try:
+       
+        response = await asyncio.to_thread(
+            openai_client.chat.completions.create,
+            model=LLM_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            timeout=20.0
+        )
+        
+        return response.choices[0].message.content
+        
     except Exception as e:
-        # Fallback при любой ошибке
+        # Fallback при ошибке
+        logging.error(f"OpenAI API Error: {e}")
         return generate_simple_interpretation(question, cards, spread_type)
 
 
