@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(dir \"C:\\\\Users\\\\Vbelo\\\\OneDrive\\\\Desktop\\\\luvo taro\\\\taro1 \\(1\\)\\\\taro1\\\\frontend\" /s /b)"
+    ]
+  }
+}

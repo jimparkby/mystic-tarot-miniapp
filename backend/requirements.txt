@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+pydantic
+python-multipart
+websockets
+aiofiles
+aiohttp
+python-dotenv
+g4f
