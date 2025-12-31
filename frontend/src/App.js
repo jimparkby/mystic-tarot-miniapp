@@ -184,7 +184,7 @@ export default function TarotApp() {
                     >
                       <div className="text-2xl md:text-3xl mb-1">{getRandomIcon()}</div>
                       <h3 className="font-semibold text-xs md:text-sm mb-1">{spread.name}</h3>
-                      <p className="text-xs text-purple-200 hidden sm:block">{spread.description}</p>
+                      <p className="text-xs text-purple-200">{spread.description}</p>
                     </button>
                   ))}
                 </div>
