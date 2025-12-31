@@ -29,7 +29,7 @@ if proxy_url:
 else:
     print("ℹ️ Прокси не настроен, используется прямое подключение")
 
-app = FastAPI(title="Mystic Tarot API")
+app = FastAPI(title="Luvo Tarot API")
 
 # Configure allowed origins for CORS
 FRONTEND_URL = getenv("FRONTEND_URL", "http://localhost:3000")
@@ -304,7 +304,7 @@ async def root():
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Mystic Tarot API</title>
+        <title>Luvo Tarot API</title>
         <style>
             body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 50px; text-align: center; }
             h1 { font-size: 3em; margin-bottom: 20px; }
@@ -314,7 +314,7 @@ async def root():
         </style>
     </head>
     <body>
-        <h1>🔮 Mystic Tarot API</h1>
+        <h1>🔮 Luvo Tarot API</h1>
         <p>Добро пожаловать в API для гадания на картах Таро!</p>
         <p><a href="/docs">📚 Документация API</a></p>
         <p><a href="/redoc">📖 ReDoc</a></p>

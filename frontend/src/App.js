@@ -144,7 +144,7 @@ export default function TarotApp() {
       <div className="relative z-10 container mx-auto px-4 py-6 pb-20">
         <header className="text-center mb-8 animate-fade-in">
           <h1 className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-            ✨ Mystic Tarot ✨
+            ✨ Luvo Tarot ✨
           </h1>
           <p className="text-base md:text-xl text-purple-200">Откройте тайны судьбы через древние карты</p>
           {telegramUser && (
